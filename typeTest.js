@@ -16,8 +16,10 @@ window.addEventListener('DOMContentLoaded', instance, false)
 
 function Model() {
   this.errorCount = 0
+  this.extraCharCount = 0
+  this.correctCharCount = 0
   this.incorrectWords = new Set()
-  this.textData = `Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem`
+  this.textData = `Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem Lorem ipsum dolor sit amet consectetur adipisicing elit Aut assumenda ratione excepturi eos voluptate deleniti dolore maiores volupta tenetur recusandae debitis consequuntur laborum Ipsum facere minus animi corporis Totam rem`
   this.currentCharIndex = 0
   this.currentWordIndex = 0
 
@@ -47,14 +49,29 @@ function Model() {
       this.errorCount++
       this.OnErrorTriggerd(this.errorCount)
       this.incorrectWords.add(this.currentWordIndex)
+    } else {
+      this.correctCharCount++
     }
     return lastValueInput === letterFromText
   }
 
   this.OnUserTextInput = (lastValue) => {
-    console.log('word : ', this.currentWordIndex)
+    console.log(
+      `this.errorCount : ${this.errorCount - this.extraCharCount},
+      this.extraCharCount : ${this.extraCharCount},
+      this.totalCharactersEncountered : ${this.totalCharactersEncountered},
+      this.correctCharCount : ${this.correctCharCount},`
+
+      // this.errorCount > 0
+      //   ? (this.errorCount / this.totalCharactersEncountered) * 100
+      //   : 100,
+      // this.incorrectWords.size,
+      // this.currentWordIndex - this.incorrectWords.size + 1,
+      // this.correctCharCount
+    )
     if (lastValue.keyCode >= 65 && lastValue.keyCode <= 90) {
       if (
+        // if the user has not completed the word
         this.currentCharIndex < this.textDataArray[this.currentWordIndex].length
       ) {
         this.ActiveCharCorrect(
@@ -68,6 +85,8 @@ function Model() {
         this.totalCharactersEncountered++
         this.currentCharIndex++
       } else {
+        // if the user has completed the word but not pressed space, so it keeps adding to the error
+        this.extraCharCount++
         this.islastValueCorrect(
           lastValue.key,
           this.textDataArray[this.currentWordIndex][this.currentCharIndex]
@@ -92,15 +111,10 @@ function Model() {
             )
             noOfSkippedCharacter++
           }
-          // noOfSkippedCharacter =
-          //   this.textDataArray[this.currentWordIndex].length -
-          //   this.currentCharIndex
-
-          // this.errorCount += noOfSkippedCharacter
-          // this.OnErrorTriggerd(this.errorCount)
         }
 
         this.totalSkippedCharacters += noOfSkippedCharacter
+        this.totalCharactersEncountered += noOfSkippedCharacter
         this.currentWordIndex++
         this.currentCharIndex = 0
         this.noOfSkippedCharacter = 0
@@ -139,7 +153,7 @@ function Model() {
       countDown++
       this.UpdateTimeCounter(countDown)
 
-      if (diff === 10) {
+      if (diff >= 60 || countDown >= 60) {
         minutesElapsed++
       }
 
@@ -151,10 +165,18 @@ function Model() {
 
       this.resultObj = {
         errorCount: this.errorCount,
-        accuracy: (this.errorCount / this.totalCharacters) * 100,
+        accuracy:
+          this.correctCharCount === 0
+            ? 0
+            : this.errorCount > 0
+            ? 100 -
+              ((this.errorCount - this.extraCharCount) /
+                this.totalCharactersEncountered) *
+                100
+            : 100,
         incorrectWords: this.incorrectWords.size,
         WPM: this.currentWordIndex - this.incorrectWords.size + 1,
-        CPM: this.totalCharactersEncountered - this.totalSkippedCharacters,
+        CPM: this.correctCharCount,
       }
 
       this.StopTimerfromController(this.resultObj)
@@ -220,11 +242,9 @@ function View() {
   }
 
   this.SetLastWordStatus = (activeWordIndex, isCorrect) => {
-    // let currWord = this.textWrapper.childNodes[activeWordIndex]
     let prevWord = undefined
     if (activeWordIndex > 0) {
       prevWord = this.textWrapper.childNodes[activeWordIndex - 1]
-      // currWord.classList.add('currentActiveWord')
       isCorrect
         ? prevWord.classList.add('correctWord')
         : prevWord.classList.add('errorWord')
@@ -269,7 +289,7 @@ function View() {
     this.restartButton.style.display = 'block'
     this.reportWPM.innerText = resultObject.WPM
     this.reportCPM.innerText = resultObject.CPM
-    this.reportAccuracy.innerText = resultObject.accuracy
+    this.reportAccuracy.innerText = resultObject.accuracy.toFixed(2) + '%'
     this.reportIncorrectWords.innerText = resultObject.incorrectWords
   }
 }
