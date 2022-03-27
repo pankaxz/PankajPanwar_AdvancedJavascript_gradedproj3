@@ -1,3 +1,19 @@
+class StartApp {
+  constructor() {
+    this.model = new Model()
+    this.view = new View()
+    this.app = new Controller(this.model, this.view)
+    if (!this._instance) {
+      this._instance = this
+    }
+    return this._instance
+  }
+}
+
+let instance = new StartApp()
+
+window.addEventListener('DOMContentLoaded', instance, false)
+
 function Model() {
   this.errorCount = 0
   this.incorrectWords = new Set()
@@ -181,6 +197,7 @@ function View() {
   this.reportAccuracy = this.GetElement('#reportAccuracy')
   this.reportError = this.GetElement('#reportError')
   this.reportIncorrectWords = this.GetElement('#reportIncorrectWords')
+  this.restartButton = this.GetElement('.restart')
 
   this.SetTextDataFromView = (textData) => {
     for (let i = 0; i < textData.length; i++) {
@@ -215,11 +232,18 @@ function View() {
   }
 
   this.SetCurrentActiveChar = (activeWordIndex, activeCharIndex, isCorrect) => {
+    let currWord = this.textWrapper.childNodes[activeWordIndex]
     let currChar =
       this.textWrapper.childNodes[activeWordIndex].childNodes[activeCharIndex]
+    let MarkWrong = (currChar, currWord) => {
+      {
+        currChar.classList.add('charWrong')
+        currWord.classList.add('errorWord')
+      }
+    }
     isCorrect
       ? currChar.classList.add('charCorrect')
-      : currChar.classList.add('charWrong')
+      : MarkWrong(currChar, currWord)
   }
 
   this.OnUserClickOnInputBarHandler = (inputHandler) => {
@@ -239,13 +263,10 @@ function View() {
   }
 
   this.StopTimer = (resultObject) => {
-    console.log(resultObject)
     this.inputTextElement.disabled = true
-    // this.textWrapper.style.display = 'none'
     this.inputTextElement.style.display = 'none'
-    // this.textDataElement.style.display = 'none'
     this.reportGroupElement.style.display = 'flex'
-
+    this.restartButton.style.display = 'block'
     this.reportWPM.innerText = resultObject.WPM
     this.reportCPM.innerText = resultObject.CPM
     this.reportAccuracy.innerText = resultObject.accuracy
@@ -292,6 +313,7 @@ function Controller(model, view) {
 
   this.view.OnUserClickOnInputBarHandler(this.OnUserClickOnInputBar)
   this.view.OnUserInputTextHandler(this.OnUserTextInput)
+  this.view.restartButton.addEventListener('click', () => location.reload())
 
   this.model.SetTextDataHandler(this.SetTextData)
   this.model.ChangeLastWordStatusHandler(this.ChangeLastWordStatus)
@@ -299,14 +321,6 @@ function Controller(model, view) {
   this.model.SetErrorCounterHandler(this.OnErrorTriggerd)
   this.model.UpdateTimeCounterHandler(this.UpdateTimeCounter)
   this.model.ShowResultHandler(this.StopTimerfromController)
-}
-
-window.addEventListener('DOMContentLoaded', StartApp, false)
-
-function StartApp() {
-  let model = new Model()
-  let view = new View()
-  const app = new Controller(model, view)
 }
 
 // console.log(

@@ -49,6 +49,22 @@ body{
   border-radius: 20px;
 }
 
+.restart{
+  text-align: center;
+  font-size: 50px;
+  width: max-content;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: space-around;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 5px;
+  display: block;  
+  border: 1px solid rgb(59, 59, 59) ;
+  padding: 50px;
+  border-radius: 20px;
+}
+
 .heading{
   display: flex;
   align-content: flex-start;
